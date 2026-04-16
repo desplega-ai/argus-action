@@ -6,7 +6,12 @@ import { formatEventLine, shouldGroup } from './log-formatter.js';
 import { innerType } from './argus-client.js';
 import { ArgusApiError, InsufficientCreditsError } from './types.js';
 import type { ArgusRunOutcomeResponse, ArgusWaitMode } from './types.js';
-import { renderCommentBody, stickyMarker, upsertPrComment } from './comment.js';
+import {
+  buildSessionUrl,
+  renderCommentBody,
+  stickyMarker,
+  upsertPrComment,
+} from './comment.js';
 import { writeStepSummary } from './step-summary.js';
 
 export type Inputs = {
@@ -152,7 +157,7 @@ async function run(): Promise<void> {
     core.info(`outcome: status=${outcome.status} elapsed_s=${outcome.elapsed_s ?? '?'}`);
 
     const uiBaseUrl = inputs.uiBaseUrl.replace(/\/$/, '');
-    const sessionUrl = `${uiBaseUrl}/argus/sessions/${runResp.session_id}`;
+    const sessionUrl = buildSessionUrl(uiBaseUrl, runResp.session_id);
     const runUrl =
       github.context.serverUrl && github.context.repo
         ? `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`

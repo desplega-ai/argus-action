@@ -1,6 +1,6 @@
 {
   "name": "argus-action",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "GitHub Action that runs an Argus agent session against a target URL and posts the resulting report as a PR comment.",
   "main": "dist/index.js",

@@ -1,10 +1,11 @@
 # Changelog
 
-## v1.1.0 — 2026-04-16
+## v1.1.0 — 2026-04-17
 
 - **Breaking:** Rename input `cope_ui_base_url` → `ui_base_url`. Default is now `https://app.desplega.ai` (previously derived from `argus_base_url` by stripping `api.`). Consumers using a custom UI host should pass it via `ui_base_url:`.
 - **Breaking:** Remove `behavior_mode` input. The action always calls Argus in `api` mode.
 - Remove internal `cope` product-name references from user-facing surfaces (README, tests, logs).
+- Fix session URL format: now `https://app.desplega.ai/argus?session=<id>` (previously the 404-ing path-style `/argus/sessions/<id>`).
 
 ## v1.0.0 — 2026-04-16
 

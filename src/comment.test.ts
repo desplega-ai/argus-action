@@ -51,7 +51,7 @@ describe('renderCommentBody', () => {
     });
     expect(body).toContain('<!-- argus-action:smoke -->');
     expect(body).toContain('### smoke: ✅ pass');
-    expect(body).toContain('https://app.desplega.ai/argus/sessions/s1');
+    expect(body).toContain('https://app.desplega.ai/argus?session=s1');
     expect(body).toContain('duration: 12.3s');
     expect(body).toContain('tokens: 300');
     expect(body).toContain('credits: 5');

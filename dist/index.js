@@ -30123,6 +30123,7 @@ function trimTrailingSlash(s) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.stickyMarker = stickyMarker;
 exports.verdictFor = verdictFor;
+exports.buildSessionUrl = buildSessionUrl;
 exports.renderCommentBody = renderCommentBody;
 exports.upsertPrComment = upsertPrComment;
 function stickyMarker(scenario, commentKey) {
@@ -30132,11 +30133,14 @@ function stickyMarker(scenario, commentKey) {
 function verdictFor(status) {
     return status === 'completed' ? '✅ pass' : '❌ fail';
 }
+function buildSessionUrl(uiBaseUrl, sessionId) {
+    return `${uiBaseUrl.replace(/\/$/, '')}/argus?session=${sessionId}`;
+}
 function renderCommentBody(args) {
     const { scenario, outcome, sessionId, uiBaseUrl, runUrl, commentKey } = args;
     const marker = stickyMarker(scenario, commentKey);
     const verdict = verdictFor(outcome.status);
-    const sessionUrl = `${uiBaseUrl.replace(/\/$/, '')}/argus/sessions/${sessionId}`;
+    const sessionUrl = buildSessionUrl(uiBaseUrl, sessionId);
     const metaParts = [`Session: [${sessionId}](${sessionUrl})`];
     if (outcome.elapsed_s != null)
         metaParts.push(`duration: ${outcome.elapsed_s.toFixed(1)}s`);
@@ -30456,7 +30460,7 @@ async function run() {
         core.setOutput('outcome_status', outcome.status);
         core.info(`outcome: status=${outcome.status} elapsed_s=${outcome.elapsed_s ?? '?'}`);
         const uiBaseUrl = inputs.uiBaseUrl.replace(/\/$/, '');
-        const sessionUrl = `${uiBaseUrl}/argus/sessions/${runResp.session_id}`;
+        const sessionUrl = (0, comment_js_1.buildSessionUrl)(uiBaseUrl, runResp.session_id);
         const runUrl = github.context.serverUrl && github.context.repo
             ? `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`
             : '';

@@ -18,11 +18,15 @@ export function verdictFor(status: ArgusStatus): string {
   return status === 'completed' ? '✅ pass' : '❌ fail';
 }
 
+export function buildSessionUrl(uiBaseUrl: string, sessionId: string): string {
+  return `${uiBaseUrl.replace(/\/$/, '')}/argus?session=${sessionId}`;
+}
+
 export function renderCommentBody(args: RenderArgs): string {
   const { scenario, outcome, sessionId, uiBaseUrl, runUrl, commentKey } = args;
   const marker = stickyMarker(scenario, commentKey);
   const verdict = verdictFor(outcome.status);
-  const sessionUrl = `${uiBaseUrl.replace(/\/$/, '')}/argus/sessions/${sessionId}`;
+  const sessionUrl = buildSessionUrl(uiBaseUrl, sessionId);
 
   const metaParts: string[] = [`Session: [${sessionId}](${sessionUrl})`];
   if (outcome.elapsed_s != null) metaParts.push(`duration: ${outcome.elapsed_s.toFixed(1)}s`);
