@@ -1,0 +1,78 @@
+name: 'Run Argus Session'
+description: 'Run an Argus agent session against a target URL and post the report as a PR comment.'
+author: 'desplega.ai'
+branding:
+  icon: 'eye'
+  color: 'purple'
+
+inputs:
+  scenario:
+    description: 'Scenario identifier. Used for sticky-comment marker and to look up a scenario file under .github/argus-scenarios/<scenario>.md.'
+    required: true
+  prompt_template:
+    description: 'Inline prompt body. When set, overrides prompt_template_file and scenario file lookup. Supports ${VAR} substitution.'
+    required: false
+    default: ''
+  prompt_template_file:
+    description: 'Path (relative to the workspace) to a prompt template file. Used when prompt_template is empty.'
+    required: false
+    default: ''
+  base_url:
+    description: 'Target URL the agent will exercise. Substituted as ${BASE_URL} in the prompt.'
+    required: true
+  argus_base_url:
+    description: 'Argus backend base URL.'
+    required: false
+    default: 'https://api.desplega.ai'
+  cope_ui_base_url:
+    description: 'UI base URL used for session links in the PR comment. Defaults to argus_base_url with a leading api. stripped.'
+    required: false
+    default: ''
+  extra_vars:
+    description: 'JSON object of additional ${VAR} values merged over the built-ins.'
+    required: false
+    default: '{}'
+  wait_mode:
+    description: 'poll (stream + poll outcome) or no (fire-and-forget).'
+    required: false
+    default: 'poll'
+  timeout_s:
+    description: 'Local wall-clock budget (seconds) for stream tail + outcome poll fallback when agent_end is not observed.'
+    required: false
+    default: '900'
+  behavior_mode:
+    description: 'Argus behavior_mode: autonomous or api.'
+    required: false
+    default: 'api'
+  fail_on:
+    description: 'failed (default) fails the job on non-pass outcome; never keeps the job green.'
+    required: false
+    default: 'failed'
+  comment_on_pr:
+    description: 'When true, upserts a sticky PR comment with the agent report.'
+    required: false
+    default: 'true'
+  comment_key:
+    description: 'Optional discriminator appended to the sticky-comment marker. Use when the same scenario runs against multiple base_urls on one PR.'
+    required: false
+    default: ''
+  github_token:
+    description: 'Token used to post the PR comment. Requires pull-requests: write.'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  session_id:
+    description: 'Argus session id.'
+  instance_id:
+    description: 'Argus instance id.'
+  poll_url:
+    description: 'Full URL for polling the session outcome.'
+  outcome_status:
+    description: 'Terminal outcome status (completed | aborted | failed | error | timed_out), or empty for wait_mode=no.'
+  comment_url:
+    description: 'URL of the upserted PR comment, or empty when no comment was posted.'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

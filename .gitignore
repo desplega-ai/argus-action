@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# TypeScript build output (non-bundled)
+lib/
+
+# ncc build artifacts other than the committed dist/
+# (dist/ is intentionally NOT ignored — it holds the bundled entrypoint.)
+
+# OS / editor noise
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Test / coverage
+coverage/
+.vitest-cache/

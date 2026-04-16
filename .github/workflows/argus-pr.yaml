@@ -1,0 +1,111 @@
+name: Argus PR
+
+on:
+  workflow_call:
+    inputs:
+      scenario:
+        required: true
+        type: string
+      prompt_template:
+        required: false
+        type: string
+        default: ''
+      prompt_template_file:
+        required: false
+        type: string
+        default: ''
+      base_url:
+        required: true
+        type: string
+      argus_base_url:
+        required: false
+        type: string
+        default: 'https://api.desplega.ai'
+      cope_ui_base_url:
+        required: false
+        type: string
+        default: ''
+      extra_vars:
+        required: false
+        type: string
+        default: '{}'
+      wait_mode:
+        required: false
+        type: string
+        default: 'poll'
+      timeout_s:
+        required: false
+        type: string
+        default: '900'
+      behavior_mode:
+        required: false
+        type: string
+        default: 'api'
+      fail_on:
+        required: false
+        type: string
+        default: 'failed'
+      comment_on_pr:
+        required: false
+        type: string
+        default: 'true'
+      comment_key:
+        required: false
+        type: string
+        default: ''
+    secrets:
+      ARGUS_API_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      scenario:
+        required: true
+        type: string
+      base_url:
+        required: true
+        type: string
+      argus_base_url:
+        required: false
+        type: string
+        default: 'https://api.desplega.ai'
+      wait_mode:
+        required: false
+        type: string
+        default: 'poll'
+      fail_on:
+        required: false
+        type: string
+        default: 'failed'
+
+concurrency:
+  group: >-
+    argus-${{ inputs.scenario }}${{ inputs.comment_key && format('-{0}', inputs.comment_key) || '' }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Argus
+        uses: ./
+        with:
+          scenario: ${{ inputs.scenario }}
+          prompt_template: ${{ inputs.prompt_template }}
+          prompt_template_file: ${{ inputs.prompt_template_file }}
+          base_url: ${{ inputs.base_url }}
+          argus_base_url: ${{ inputs.argus_base_url }}
+          cope_ui_base_url: ${{ inputs.cope_ui_base_url }}
+          extra_vars: ${{ inputs.extra_vars }}
+          wait_mode: ${{ inputs.wait_mode }}
+          timeout_s: ${{ inputs.timeout_s }}
+          behavior_mode: ${{ inputs.behavior_mode }}
+          fail_on: ${{ inputs.fail_on }}
+          comment_on_pr: ${{ inputs.comment_on_pr }}
+          comment_key: ${{ inputs.comment_key }}
+        env:
+          ARGUS_API_KEY: ${{ secrets.ARGUS_API_KEY }}

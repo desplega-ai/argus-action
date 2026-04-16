@@ -1,0 +1,38 @@
+{
+  "name": "argus-action",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitHub Action that runs an Argus agent session against a target URL and posts the resulting report as a PR comment.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest --passWithNoTests",
+    "format": "prettier --write \"src/**/*.ts\" \"*.{json,yml,yaml,md}\""
+  },
+  "keywords": [
+    "github-action",
+    "argus",
+    "desplega",
+    "qa",
+    "agent"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.14.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vercel/ncc": "^0.38.1",
+    "eslint": "^8.57.0",
+    "js-yaml": "^4.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

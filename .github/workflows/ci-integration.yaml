@@ -1,0 +1,23 @@
+name: CI Integration (live, label-gated)
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  live-smoke:
+    if: github.event.label.name == 'test-action-live'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Argus against desplega.ai
+        uses: ./
+        with:
+          scenario: smoke-login
+          base_url: https://desplega.ai
+          fail_on: failed
+        env:
+          ARGUS_API_KEY: ${{ secrets.ARGUS_API_KEY }}

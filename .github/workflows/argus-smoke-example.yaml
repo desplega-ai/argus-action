@@ -1,0 +1,22 @@
+name: Argus Smoke (example)
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Target URL to smoke.'
+        required: true
+        type: string
+        default: 'https://desplega.ai'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  smoke:
+    uses: ./.github/workflows/argus-pr.yaml
+    with:
+      scenario: smoke-login
+      base_url: ${{ inputs.base_url || 'https://desplega.ai' }}
+      fail_on: failed
+    secrets:
+      ARGUS_API_KEY: ${{ secrets.ARGUS_API_KEY }}
