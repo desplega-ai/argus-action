@@ -52,6 +52,25 @@ jobs:
 - If you deploy multiple Vercel projects from one monorepo, add `environment: preview` + a project filter — see the action's own README.
 - Prefer a Vercel PR comment parser only if you specifically need the production alias; the deployment event path is more reliable.
 
+### Deployment Protection (bypass)
+
+Vercel previews sit behind **Deployment Protection** by default on Pro/Enterprise plans — the agent hits Vercel's auth wall before your app ever renders. `argus-action` supports **query-param bypass only** today.
+
+1. In Vercel → Project → Settings → Deployment Protection → **Protection Bypass for Automation**, generate a secret.
+2. Store it as a repo secret (e.g. `VERCEL_AUTOMATION_BYPASS_SECRET`).
+3. Append it to `base_url`. Include `x-vercel-set-bypass-cookie=true` so Vercel issues a redirect with `Set-Cookie` on the first request, and the agent's follow-up navigation inherits the bypass instead of re-hitting the wall on every link click:
+
+```yaml
+      - uses: desplega-ai/argus-action@v1
+        with:
+          scenario: smoke-login
+          base_url: ${{ steps.vercel.outputs.url }}/?x-vercel-protection-bypass=${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}&x-vercel-set-bypass-cookie=true
+        env:
+          ARGUS_API_KEY: ${{ secrets.ARGUS_API_KEY }}
+```
+
+> **Header-based bypass** (sending `x-vercel-protection-bypass` as a request header, keeping the secret out of the URL) is not wired through the action yet — email `t@desplega.ai` if you need it for your workspace.
+
 ---
 
 ## Netlify
@@ -214,6 +233,18 @@ If your provider writes to the GitHub Deployments API (most do), `bobheadxi/depl
         env:
           ARGUS_API_KEY: ${{ secrets.ARGUS_API_KEY }}
 ```
+
+---
+
+## Deployment protection (other providers)
+
+The same class of problem — provider-level auth blocking the agent before your app loads — applies to more than just Vercel. Current status:
+
+- **Vercel Deployment Protection** — query-param bypass supported today. See [Vercel § Deployment Protection (bypass)](#deployment-protection-bypass) above.
+- **Cloudflare Access (Zero Trust)** — needs `CF-Access-Client-Id` + `CF-Access-Client-Secret` request headers. The action does not pass custom headers through to the agent's browser yet — email `t@desplega.ai` if you need it.
+- **Netlify password protection / Cloudflare Pages Access** — same header-only story. Roadmap; email `t@desplega.ai`.
+
+Working around it in the meantime: configure the preview to be public for Argus runs (e.g. a dedicated preview environment without protection), or rely on an app-level login the agent can perform itself — pass credentials via `extra_vars` and write a prompt template that tells the agent to sign in first.
 
 ---
 
