@@ -6,12 +6,7 @@ import { formatEventLine, shouldGroup } from './log-formatter.js';
 import { innerType } from './argus-client.js';
 import { ArgusApiError, InsufficientCreditsError } from './types.js';
 import type { ArgusRunOutcomeResponse, ArgusWaitMode } from './types.js';
-import {
-  deriveCopeBaseUrl,
-  renderCommentBody,
-  stickyMarker,
-  upsertPrComment,
-} from './comment.js';
+import { renderCommentBody, stickyMarker, upsertPrComment } from './comment.js';
 import { writeStepSummary } from './step-summary.js';
 
 export type Inputs = {
@@ -20,11 +15,10 @@ export type Inputs = {
   promptTemplateFile: string;
   baseUrl: string;
   argusBaseUrl: string;
-  copeUiBaseUrl: string;
+  uiBaseUrl: string;
   extraVars: string;
   waitMode: string;
   timeoutS: number;
-  behaviorMode: string;
   failOn: string;
   commentOnPr: boolean;
   commentKey: string;
@@ -38,11 +32,10 @@ export function readInputs(): Inputs {
     promptTemplateFile: core.getInput('prompt_template_file'),
     baseUrl: core.getInput('base_url', { required: true }),
     argusBaseUrl: core.getInput('argus_base_url') || 'https://api.desplega.ai',
-    copeUiBaseUrl: core.getInput('cope_ui_base_url'),
+    uiBaseUrl: core.getInput('ui_base_url') || 'https://app.desplega.ai',
     extraVars: core.getInput('extra_vars') || '{}',
     waitMode: core.getInput('wait_mode') || 'poll',
     timeoutS: Number.parseInt(core.getInput('timeout_s') || '900', 10),
-    behaviorMode: core.getInput('behavior_mode') || 'api',
     failOn: core.getInput('fail_on') || 'failed',
     commentOnPr: (core.getInput('comment_on_pr') || 'true').toLowerCase() === 'true',
     commentKey: core.getInput('comment_key'),
@@ -69,7 +62,6 @@ async function run(): Promise<void> {
     core.info(`argus_base_url=${inputs.argusBaseUrl}`);
     core.info(`wait_mode=${inputs.waitMode}`);
     core.info(`timeout_s=${inputs.timeoutS}`);
-    core.info(`behavior_mode=${inputs.behaviorMode}`);
     core.info(`fail_on=${inputs.failOn}`);
     core.info(`comment_on_pr=${inputs.commentOnPr}`);
 
@@ -99,7 +91,7 @@ async function run(): Promise<void> {
       body: {
         prompt,
         wait: backendWait,
-        behavior_mode: inputs.behaviorMode as 'autonomous' | 'api',
+        behavior_mode: 'api',
       },
     });
 
@@ -159,8 +151,8 @@ async function run(): Promise<void> {
     core.setOutput('outcome_status', outcome.status);
     core.info(`outcome: status=${outcome.status} elapsed_s=${outcome.elapsed_s ?? '?'}`);
 
-    const copeBaseUrl = deriveCopeBaseUrl(inputs.argusBaseUrl, inputs.copeUiBaseUrl);
-    const sessionUrl = `${copeBaseUrl}/argus/sessions/${runResp.session_id}`;
+    const uiBaseUrl = inputs.uiBaseUrl.replace(/\/$/, '');
+    const sessionUrl = `${uiBaseUrl}/argus/sessions/${runResp.session_id}`;
     const runUrl =
       github.context.serverUrl && github.context.repo
         ? `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`
@@ -174,7 +166,7 @@ async function run(): Promise<void> {
         scenario: inputs.scenario,
         outcome,
         sessionId: runResp.session_id,
-        copeBaseUrl,
+        uiBaseUrl,
         runUrl,
         commentKey: inputs.commentKey,
       });

@@ -21,10 +21,10 @@ on:
         required: false
         type: string
         default: 'https://api.desplega.ai'
-      cope_ui_base_url:
+      ui_base_url:
         required: false
         type: string
-        default: ''
+        default: 'https://app.desplega.ai'
       extra_vars:
         required: false
         type: string
@@ -37,10 +37,6 @@ on:
         required: false
         type: string
         default: '900'
-      behavior_mode:
-        required: false
-        type: string
-        default: 'api'
       fail_on:
         required: false
         type: string
@@ -99,11 +95,10 @@ jobs:
           prompt_template_file: ${{ inputs.prompt_template_file }}
           base_url: ${{ inputs.base_url }}
           argus_base_url: ${{ inputs.argus_base_url }}
-          cope_ui_base_url: ${{ inputs.cope_ui_base_url }}
+          ui_base_url: ${{ inputs.ui_base_url }}
           extra_vars: ${{ inputs.extra_vars }}
           wait_mode: ${{ inputs.wait_mode }}
           timeout_s: ${{ inputs.timeout_s }}
-          behavior_mode: ${{ inputs.behavior_mode }}
           fail_on: ${{ inputs.fail_on }}
           comment_on_pr: ${{ inputs.comment_on_pr }}
           comment_key: ${{ inputs.comment_key }}

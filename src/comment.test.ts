@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  deriveCopeBaseUrl,
   renderCommentBody,
   stickyMarker,
   upsertPrComment,
@@ -41,34 +40,18 @@ describe('verdictFor', () => {
   });
 });
 
-describe('deriveCopeBaseUrl', () => {
-  it('strips api. from argus_base_url', () => {
-    expect(deriveCopeBaseUrl('https://api.desplega.ai', '')).toBe('https://desplega.ai');
-  });
-  it('respects explicit override', () => {
-    expect(deriveCopeBaseUrl('https://api.desplega.ai', 'https://ui.test')).toBe(
-      'https://ui.test',
-    );
-  });
-  it('leaves non-api hostnames alone', () => {
-    expect(deriveCopeBaseUrl('https://staging.example.com', '')).toBe(
-      'https://staging.example.com',
-    );
-  });
-});
-
 describe('renderCommentBody', () => {
   it('renders pass with report', () => {
     const body = renderCommentBody({
       scenario: 'smoke',
       outcome: baseOutcome,
       sessionId: 's1',
-      copeBaseUrl: 'https://desplega.ai',
+      uiBaseUrl: 'https://app.desplega.ai',
       runUrl: 'https://gh.test/run/1',
     });
     expect(body).toContain('<!-- argus-action:smoke -->');
     expect(body).toContain('### smoke: ✅ pass');
-    expect(body).toContain('https://desplega.ai/argus/sessions/s1');
+    expect(body).toContain('https://app.desplega.ai/argus/sessions/s1');
     expect(body).toContain('duration: 12.3s');
     expect(body).toContain('tokens: 300');
     expect(body).toContain('credits: 5');
@@ -81,7 +64,7 @@ describe('renderCommentBody', () => {
       scenario: 'smoke',
       outcome: { session_id: 's1', status: 'failed', error: 'boom' },
       sessionId: 's1',
-      copeBaseUrl: 'https://desplega.ai',
+      uiBaseUrl: 'https://app.desplega.ai',
       runUrl: '',
     });
     expect(body).toContain('### smoke: ❌ fail');
@@ -94,7 +77,7 @@ describe('renderCommentBody', () => {
       scenario: 'smoke',
       outcome: { session_id: 's1', status: 'timed_out' },
       sessionId: 's1',
-      copeBaseUrl: 'https://desplega.ai',
+      uiBaseUrl: 'https://app.desplega.ai',
       runUrl: '',
     });
     expect(body).toContain('_No report produced._');
@@ -105,7 +88,7 @@ describe('renderCommentBody', () => {
       scenario: 'smoke',
       outcome: baseOutcome,
       sessionId: 's1',
-      copeBaseUrl: 'https://desplega.ai',
+      uiBaseUrl: 'https://app.desplega.ai',
       runUrl: '',
       commentKey: 'preview',
     });

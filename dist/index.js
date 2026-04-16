@@ -30123,7 +30123,6 @@ function trimTrailingSlash(s) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.stickyMarker = stickyMarker;
 exports.verdictFor = verdictFor;
-exports.deriveCopeBaseUrl = deriveCopeBaseUrl;
 exports.renderCommentBody = renderCommentBody;
 exports.upsertPrComment = upsertPrComment;
 function stickyMarker(scenario, commentKey) {
@@ -30133,17 +30132,11 @@ function stickyMarker(scenario, commentKey) {
 function verdictFor(status) {
     return status === 'completed' ? '✅ pass' : '❌ fail';
 }
-function deriveCopeBaseUrl(argusBaseUrl, override) {
-    if (override && override.length > 0)
-        return override.replace(/\/$/, '');
-    const trimmed = argusBaseUrl.replace(/\/$/, '');
-    return trimmed.replace(/^(https?:\/\/)api\./, '$1');
-}
 function renderCommentBody(args) {
-    const { scenario, outcome, sessionId, copeBaseUrl, runUrl, commentKey } = args;
+    const { scenario, outcome, sessionId, uiBaseUrl, runUrl, commentKey } = args;
     const marker = stickyMarker(scenario, commentKey);
     const verdict = verdictFor(outcome.status);
-    const sessionUrl = `${copeBaseUrl.replace(/\/$/, '')}/argus/sessions/${sessionId}`;
+    const sessionUrl = `${uiBaseUrl.replace(/\/$/, '')}/argus/sessions/${sessionId}`;
     const metaParts = [`Session: [${sessionId}](${sessionUrl})`];
     if (outcome.elapsed_s != null)
         metaParts.push(`duration: ${outcome.elapsed_s.toFixed(1)}s`);
@@ -30357,11 +30350,10 @@ function readInputs() {
         promptTemplateFile: core.getInput('prompt_template_file'),
         baseUrl: core.getInput('base_url', { required: true }),
         argusBaseUrl: core.getInput('argus_base_url') || 'https://api.desplega.ai',
-        copeUiBaseUrl: core.getInput('cope_ui_base_url'),
+        uiBaseUrl: core.getInput('ui_base_url') || 'https://app.desplega.ai',
         extraVars: core.getInput('extra_vars') || '{}',
         waitMode: core.getInput('wait_mode') || 'poll',
         timeoutS: Number.parseInt(core.getInput('timeout_s') || '900', 10),
-        behaviorMode: core.getInput('behavior_mode') || 'api',
         failOn: core.getInput('fail_on') || 'failed',
         commentOnPr: (core.getInput('comment_on_pr') || 'true').toLowerCase() === 'true',
         commentKey: core.getInput('comment_key'),
@@ -30383,7 +30375,6 @@ async function run() {
         core.info(`argus_base_url=${inputs.argusBaseUrl}`);
         core.info(`wait_mode=${inputs.waitMode}`);
         core.info(`timeout_s=${inputs.timeoutS}`);
-        core.info(`behavior_mode=${inputs.behaviorMode}`);
         core.info(`fail_on=${inputs.failOn}`);
         core.info(`comment_on_pr=${inputs.commentOnPr}`);
         const resolved = (0, template_js_1.resolvePromptBody)({
@@ -30408,7 +30399,7 @@ async function run() {
             body: {
                 prompt,
                 wait: backendWait,
-                behavior_mode: inputs.behaviorMode,
+                behavior_mode: 'api',
             },
         });
         core.setOutput('session_id', runResp.session_id);
@@ -30464,8 +30455,8 @@ async function run() {
         }
         core.setOutput('outcome_status', outcome.status);
         core.info(`outcome: status=${outcome.status} elapsed_s=${outcome.elapsed_s ?? '?'}`);
-        const copeBaseUrl = (0, comment_js_1.deriveCopeBaseUrl)(inputs.argusBaseUrl, inputs.copeUiBaseUrl);
-        const sessionUrl = `${copeBaseUrl}/argus/sessions/${runResp.session_id}`;
+        const uiBaseUrl = inputs.uiBaseUrl.replace(/\/$/, '');
+        const sessionUrl = `${uiBaseUrl}/argus/sessions/${runResp.session_id}`;
         const runUrl = github.context.serverUrl && github.context.repo
             ? `${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}`
             : '';
@@ -30477,7 +30468,7 @@ async function run() {
                 scenario: inputs.scenario,
                 outcome,
                 sessionId: runResp.session_id,
-                copeBaseUrl,
+                uiBaseUrl,
                 runUrl,
                 commentKey: inputs.commentKey,
             });

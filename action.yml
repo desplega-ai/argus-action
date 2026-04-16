@@ -25,10 +25,10 @@ inputs:
     description: 'Argus backend base URL.'
     required: false
     default: 'https://api.desplega.ai'
-  cope_ui_base_url:
-    description: 'UI base URL used for session links in the PR comment. Defaults to argus_base_url with a leading api. stripped.'
+  ui_base_url:
+    description: 'UI base URL used for session links in the PR comment.'
     required: false
-    default: ''
+    default: 'https://app.desplega.ai'
   extra_vars:
     description: 'JSON object of additional ${VAR} values merged over the built-ins.'
     required: false
@@ -41,10 +41,6 @@ inputs:
     description: 'Local wall-clock budget (seconds) for stream tail + outcome poll fallback when agent_end is not observed.'
     required: false
     default: '900'
-  behavior_mode:
-    description: 'Argus behavior_mode: autonomous or api.'
-    required: false
-    default: 'api'
   fail_on:
     description: 'failed (default) fails the job on non-pass outcome; never keeps the job green.'
     required: false

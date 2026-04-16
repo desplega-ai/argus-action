@@ -25,7 +25,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - uses: <owner>/argus-action@v1
+      - uses: desplega-ai/argus-action@v1
         with:
           scenario: smoke-login
           base_url: https://preview.example.com/pr-${{ github.event.pull_request.number }}
@@ -46,11 +46,10 @@ The only required secret is `ARGUS_API_KEY`. Everything else is an input.
 | `prompt_template` | no | `''` | Inline prompt body. Overrides `prompt_template_file` and scenario file lookup. |
 | `prompt_template_file` | no | `''` | Path (relative to workspace) to a prompt template file. |
 | `argus_base_url` | no | `https://api.desplega.ai` | Argus backend base URL. |
-| `cope_ui_base_url` | no | derived | UI base URL used in the PR comment's session link. Defaults to `argus_base_url` with a leading `api.` stripped. |
+| `ui_base_url` | no | `https://app.desplega.ai` | UI base URL used in the PR comment's session link. |
 | `extra_vars` | no | `{}` | JSON object of additional `${VAR}` values merged over the built-ins. |
 | `wait_mode` | no | `poll` | `poll` (stream + poll outcome) or `no` (fire-and-forget). |
 | `timeout_s` | no | `900` | Local wall-clock budget (seconds) for the stream-fallback outcome poll. |
-| `behavior_mode` | no | `api` | Argus `behavior_mode`: `autonomous` or `api`. |
 | `fail_on` | no | `failed` | `failed` fails the job on non-pass; `never` keeps the job green. |
 | `comment_on_pr` | no | `true` | When `true`, upserts a sticky PR comment with the agent report. |
 | `comment_key` | no | `''` | Optional discriminator appended to the comment marker. Use when the same scenario runs against multiple `base_url`s on one PR. |
@@ -97,7 +96,7 @@ For consumer repos that prefer `uses: workflow` ergonomics, a reusable workflow 
 ```yaml
 jobs:
   argus:
-    uses: <owner>/argus-action/.github/workflows/argus-pr.yaml@v1
+    uses: desplega-ai/argus-action/.github/workflows/argus-pr.yaml@v1
     with:
       scenario: smoke-login
       base_url: https://preview.example.com/pr-${{ github.event.pull_request.number }}
@@ -121,7 +120,7 @@ on:
 jobs:
   explore:
     if: github.event.label.name == 'run-argus'
-    uses: <owner>/argus-action/.github/workflows/argus-pr.yaml@v1
+    uses: desplega-ai/argus-action/.github/workflows/argus-pr.yaml@v1
     with:
       scenario: pr-explore
       base_url: https://preview.example.com/pr-${{ github.event.pull_request.number }}
@@ -154,10 +153,6 @@ The bundled entrypoint at `dist/index.js` is committed — CI fails if `git diff
 ## Releasing
 
 - Push a semver tag (`v1.2.3`). The `release.yaml` workflow re-points the `v1` moving tag to the pushed SHA so consumers pinned at `@v1` pick up the release.
-
-## Why `action.yml` at the repo root?
-
-This is a dedicated standalone action repo. GitHub Marketplace requires `action.yml` at the repo root, which also gives consumers the shorter `uses: <owner>/argus-action@v1` instead of `<owner>/argus-action/.github/actions/argus-run@v1`. The ticket's `.github/actions/argus-run/` path is preserved as a stub that re-points here — useful if this repo is ever forked into a multi-action monorepo layout.
 
 ## License
 

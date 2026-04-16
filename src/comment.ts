@@ -4,7 +4,7 @@ export type RenderArgs = {
   scenario: string;
   outcome: ArgusRunOutcomeResponse;
   sessionId: string;
-  copeBaseUrl: string;
+  uiBaseUrl: string;
   runUrl: string;
   commentKey?: string;
 };
@@ -18,17 +18,11 @@ export function verdictFor(status: ArgusStatus): string {
   return status === 'completed' ? '✅ pass' : '❌ fail';
 }
 
-export function deriveCopeBaseUrl(argusBaseUrl: string, override: string): string {
-  if (override && override.length > 0) return override.replace(/\/$/, '');
-  const trimmed = argusBaseUrl.replace(/\/$/, '');
-  return trimmed.replace(/^(https?:\/\/)api\./, '$1');
-}
-
 export function renderCommentBody(args: RenderArgs): string {
-  const { scenario, outcome, sessionId, copeBaseUrl, runUrl, commentKey } = args;
+  const { scenario, outcome, sessionId, uiBaseUrl, runUrl, commentKey } = args;
   const marker = stickyMarker(scenario, commentKey);
   const verdict = verdictFor(outcome.status);
-  const sessionUrl = `${copeBaseUrl.replace(/\/$/, '')}/argus/sessions/${sessionId}`;
+  const sessionUrl = `${uiBaseUrl.replace(/\/$/, '')}/argus/sessions/${sessionId}`;
 
   const metaParts: string[] = [`Session: [${sessionId}](${sessionUrl})`];
   if (outcome.elapsed_s != null) metaParts.push(`duration: ${outcome.elapsed_s.toFixed(1)}s`);
