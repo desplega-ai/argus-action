@@ -7,6 +7,8 @@ One action, two use cases without a rewrite:
 - **Deterministic smoke test** — canned prompt, fails the job on non-pass (good for required checks).
 - **Exploratory agent run** — "try X, tell us if anything looks broken" (informational; `fail_on: never`).
 
+> **Using a preview-deployment provider?** See [`docs/recipes.md`](./docs/recipes.md) for copy-pasteable snippets for Vercel, Netlify, Cloudflare Pages, Fly.io, Render, Railway, and generic GitHub Deployments.
+
 ## Quick start
 
 ```yaml
@@ -104,6 +106,10 @@ jobs:
 ```
 
 The reusable workflow runs at most one instance per `(scenario, comment_key, ref)` tuple (rapid PR pushes cancel in flight).
+
+## Preview-deployment recipes
+
+Provider-specific patterns for plumbing the PR preview URL into `base_url` live in [`docs/recipes.md`](./docs/recipes.md). Covers Vercel, Netlify, Cloudflare Pages, Fly.io, Render, Railway, generic GitHub Deployments, and parsing URLs out of PR comments.
 
 ## Label-gated explore mode
 
