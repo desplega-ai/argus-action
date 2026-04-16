@@ -30325,7 +30325,7 @@ const comment_js_1 = __nccwpck_require__(2246);
 const step_summary_js_1 = __nccwpck_require__(7272);
 function readInputs() {
     return {
-        scenario: core.getInput('scenario', { required: true }),
+        scenario: core.getInput('scenario') || 'argus',
         promptTemplate: core.getInput('prompt_template'),
         promptTemplateFile: core.getInput('prompt_template_file'),
         baseUrl: core.getInput('base_url', { required: true }),

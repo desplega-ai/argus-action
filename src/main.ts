@@ -32,7 +32,7 @@ export type Inputs = {
 
 export function readInputs(): Inputs {
   return {
-    scenario: core.getInput('scenario', { required: true }),
+    scenario: core.getInput('scenario') || 'argus',
     promptTemplate: core.getInput('prompt_template'),
     promptTemplateFile: core.getInput('prompt_template_file'),
     baseUrl: core.getInput('base_url', { required: true }),

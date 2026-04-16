@@ -7,8 +7,9 @@ branding:
 
 inputs:
   scenario:
-    description: 'Scenario identifier. Used for sticky-comment marker and to look up a scenario file under .github/argus-scenarios/<scenario>.md.'
-    required: true
+    description: 'Scenario identifier. Used for sticky-comment marker and to look up a scenario file under .github/argus-scenarios/<scenario>.md. Optional — defaults to "argus". When no scenario file, prompt_template, or prompt_template_file is provided, the built-in DEFAULT_PROMPT is used.'
+    required: false
+    default: 'argus'
   prompt_template:
     description: 'Inline prompt body. When set, overrides prompt_template_file and scenario file lookup. Supports ${VAR} substitution.'
     required: false

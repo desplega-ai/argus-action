@@ -39,7 +39,7 @@ The only required secret is `ARGUS_API_KEY`. Everything else is an input.
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `scenario` | yes | — | Scenario identifier. Also used as the sticky-comment marker key. |
+| `scenario` | no | `argus` | Scenario identifier. Also used as the sticky-comment marker key. When no scenario file / `prompt_template` / `prompt_template_file` is provided, the built-in `DEFAULT_PROMPT` is used. |
 | `base_url` | yes | — | Target URL the agent will exercise. Substituted as `${BASE_URL}` in the prompt. |
 | `prompt_template` | no | `''` | Inline prompt body. Overrides `prompt_template_file` and scenario file lookup. |
 | `prompt_template_file` | no | `''` | Path (relative to workspace) to a prompt template file. |
