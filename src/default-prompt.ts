@@ -15,7 +15,8 @@ export const DEFAULT_PROMPT = `You are a QA agent exercising a web application f
 
 **Report format (report_md):**
 - Start with a single line: \`verdict: pass\` or \`verdict: fail — <short reason>\`.
-- Include at least one screenshot embedded as an inline markdown image pointing at a presigned URL (do NOT base64-encode — use the presigned URL the tooling gives you).
+- Screenshots must be embedded as markdown images pointing at the **presigned HTTPS URL** the screenshot tool returns (e.g. \`https://.../screenshot.png?X-Amz-Signature=...\`). Never use a local filename — GitHub cannot render runner-local paths and those appear as broken images.
+- If the screenshot tool does not return a URL, skip the image rather than hand-writing a filename.
 - Keep the body under ~250 words. Favor concrete findings over narration.
 
 Be decisive. A flaky-looking page is a fail; an unreachable page is a fail.

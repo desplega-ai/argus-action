@@ -544,7 +544,7 @@ Protect the repo from regressions (dist drift, lint/typecheck breakage, YAML inv
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `ci.yaml` passes on its own first PR: `gh run watch` after pushing.
+- [x] `ci.yaml` passes on its own first PR: `gh run watch` after pushing.
 - [x] `actionlint` finds no issues: `actionlint` locally.
 - [x] Bundle-drift guard works: `echo "// noise" >> src/main.ts && npm run build` produces a diff that CI would catch. (Revert the noise after testing.)
 - [x] YAML lint across workflows passes: `yamllint .github/workflows/`.

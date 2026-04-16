@@ -1,15 +1,26 @@
-import type { SseEvent } from './argus-client.js';
+import { innerType, type SseEvent } from './argus-client.js';
 
 const MAX_PLAIN = 160;
 
 export function formatEventLine(evt: SseEvent): string {
-  const tag = `[${evt.event}]`;
+  const tagName = evt.event === 'message' ? (innerType(evt) ?? 'message') : evt.event;
+  const tag = `[${tagName}]`;
   const summary = extractSummary(evt.data);
   return summary ? `${tag} ${summary}` : tag;
 }
 
 export function shouldGroup(evt: SseEvent): boolean {
-  return evt.event === 'tool_use' || evt.event === 'tool_result';
+  const t = evt.event === 'message' ? innerType(evt) : evt.event;
+  return (
+    t === 'tool_use' ||
+    t === 'tool_result' ||
+    t === 'tool_execution_start' ||
+    t === 'tool_execution_update' ||
+    t === 'tool_execution_end' ||
+    t === 'toolcall_start' ||
+    t === 'toolcall_delta' ||
+    t === 'toolcall_end'
+  );
 }
 
 function extractSummary(raw: string): string {

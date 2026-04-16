@@ -15,7 +15,8 @@ ${PR_BODY}
 
 **Reporting (report_md)**
 - Start with a single line: `verdict: pass` or `verdict: fail — <reason>`.
-- Include at least one screenshot as an inline markdown image referencing a presigned URL (no base64).
+- Screenshots must be embedded as markdown images pointing at the **presigned HTTPS URL** the screenshot tool returns. Never use a local filename — GitHub cannot render runner-local paths and they appear as broken images in the comment.
+- If the screenshot tool does not return a URL, skip the image rather than hand-writing a filename.
 - Mention any behavior that diverges from what the PR description implies, even if it looks intentional.
 - Keep the body under ~300 words. Concrete observations over narration.
 

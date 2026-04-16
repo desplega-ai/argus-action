@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { startRun, streamEvents, pollOutcome, parseSseFrame } from './argus-client.js';
+import {
+  startRun,
+  streamEvents,
+  pollOutcome,
+  parseSseFrame,
+  isAgentEnd,
+  innerType,
+} from './argus-client.js';
 import { ArgusApiError, InsufficientCreditsError } from './types.js';
 
 afterEach(() => {
@@ -47,6 +54,24 @@ describe('startRun', () => {
         body: { prompt: 'hi', wait: 'stream' },
       }),
     ).rejects.toThrow(ArgusApiError);
+  });
+});
+
+describe('innerType / isAgentEnd', () => {
+  it('returns undefined for non-JSON data', () => {
+    expect(innerType({ event: 'message', data: 'hello' })).toBeUndefined();
+  });
+  it('returns JSON type field', () => {
+    expect(innerType({ event: 'message', data: '{"type":"tool_use"}' })).toBe('tool_use');
+  });
+  it('isAgentEnd matches top-level event', () => {
+    expect(isAgentEnd({ event: 'agent_end', data: '' })).toBe(true);
+  });
+  it('isAgentEnd matches nested JSON type', () => {
+    expect(isAgentEnd({ event: 'message', data: '{"type":"agent_end"}' })).toBe(true);
+  });
+  it('isAgentEnd false otherwise', () => {
+    expect(isAgentEnd({ event: 'message', data: '{"type":"turn_end"}' })).toBe(false);
   });
 });
 
@@ -102,6 +127,20 @@ describe('streamEvents', () => {
     expect(events).toHaveLength(2);
     expect(events[0].event).toBe('step');
     expect(events[1].event).toBe('agent_end');
+  });
+
+  it('detects agent_end packed inside a message-event JSON payload', async () => {
+    const body =
+      'event: message\ndata: {"type":"connected"}\n\nevent: message\ndata: {"type":"agent_end"}\n\n';
+    mockFetch(async () => new Response(makeSseStream(body), { status: 200 }));
+    const result = await streamEvents({
+      argusBaseUrl: 'https://api.test',
+      apiKey: 'key',
+      streamUrl: '/stream/s1',
+      onEvent: () => {},
+      sleep: noopSleep,
+    });
+    expect(result.sawAgentEnd).toBe(true);
   });
 
   it('retries on 409 then succeeds', async () => {

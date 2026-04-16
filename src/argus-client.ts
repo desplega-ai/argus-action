@@ -98,7 +98,7 @@ export async function streamEvents(args: StreamEventsArgs): Promise<StreamEvents
         const evt = parseSseFrame(frame);
         if (evt) {
           onEvent(evt);
-          if (evt.event === 'agent_end') {
+          if (isAgentEnd(evt)) {
             sawAgentEnd = true;
             try {
               await reader.cancel();
@@ -114,7 +114,7 @@ export async function streamEvents(args: StreamEventsArgs): Promise<StreamEvents
       const evt = parseSseFrame(buffer);
       if (evt) {
         onEvent(evt);
-        if (evt.event === 'agent_end') sawAgentEnd = true;
+        if (isAgentEnd(evt)) sawAgentEnd = true;
       }
     }
   } catch {
@@ -122,6 +122,20 @@ export async function streamEvents(args: StreamEventsArgs): Promise<StreamEvents
   }
 
   return { sawAgentEnd };
+}
+
+export function innerType(evt: SseEvent): string | undefined {
+  try {
+    const parsed = JSON.parse(evt.data) as Record<string, unknown>;
+    const t = parsed?.type;
+    return typeof t === 'string' ? t : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function isAgentEnd(evt: SseEvent): boolean {
+  return evt.event === 'agent_end' || innerType(evt) === 'agent_end';
 }
 
 function findFrameEnd(buf: string): number {

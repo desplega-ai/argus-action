@@ -29930,6 +29930,8 @@ function wrappy (fn, cb) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.startRun = startRun;
 exports.streamEvents = streamEvents;
+exports.innerType = innerType;
+exports.isAgentEnd = isAgentEnd;
 exports.parseSseFrame = parseSseFrame;
 exports.pollOutcome = pollOutcome;
 const types_js_1 = __nccwpck_require__(8522);
@@ -29999,7 +30001,7 @@ async function streamEvents(args) {
                 const evt = parseSseFrame(frame);
                 if (evt) {
                     onEvent(evt);
-                    if (evt.event === 'agent_end') {
+                    if (isAgentEnd(evt)) {
                         sawAgentEnd = true;
                         try {
                             await reader.cancel();
@@ -30016,7 +30018,7 @@ async function streamEvents(args) {
             const evt = parseSseFrame(buffer);
             if (evt) {
                 onEvent(evt);
-                if (evt.event === 'agent_end')
+                if (isAgentEnd(evt))
                     sawAgentEnd = true;
             }
         }
@@ -30025,6 +30027,19 @@ async function streamEvents(args) {
         // Mid-stream disconnect — fall through.
     }
     return { sawAgentEnd };
+}
+function innerType(evt) {
+    try {
+        const parsed = JSON.parse(evt.data);
+        const t = parsed?.type;
+        return typeof t === 'string' ? t : undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+function isAgentEnd(evt) {
+    return evt.event === 'agent_end' || innerType(evt) === 'agent_end';
 }
 function findFrameEnd(buf) {
     const a = buf.indexOf('\n\n');
@@ -30226,7 +30241,8 @@ exports.DEFAULT_PROMPT = `You are a QA agent exercising a web application for a 
 
 **Report format (report_md):**
 - Start with a single line: \`verdict: pass\` or \`verdict: fail — <short reason>\`.
-- Include at least one screenshot embedded as an inline markdown image pointing at a presigned URL (do NOT base64-encode — use the presigned URL the tooling gives you).
+- Screenshots must be embedded as markdown images pointing at the **presigned HTTPS URL** the screenshot tool returns (e.g. \`https://.../screenshot.png?X-Amz-Signature=...\`). Never use a local filename — GitHub cannot render runner-local paths and those appear as broken images.
+- If the screenshot tool does not return a URL, skip the image rather than hand-writing a filename.
 - Keep the body under ~250 words. Favor concrete findings over narration.
 
 Be decisive. A flaky-looking page is a fail; an unreachable page is a fail.
@@ -30236,21 +30252,31 @@ Be decisive. A flaky-looking page is a fail; an unreachable page is a fail.
 /***/ }),
 
 /***/ 698:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.formatEventLine = formatEventLine;
 exports.shouldGroup = shouldGroup;
+const argus_client_js_1 = __nccwpck_require__(2367);
 const MAX_PLAIN = 160;
 function formatEventLine(evt) {
-    const tag = `[${evt.event}]`;
+    const tagName = evt.event === 'message' ? ((0, argus_client_js_1.innerType)(evt) ?? 'message') : evt.event;
+    const tag = `[${tagName}]`;
     const summary = extractSummary(evt.data);
     return summary ? `${tag} ${summary}` : tag;
 }
 function shouldGroup(evt) {
-    return evt.event === 'tool_use' || evt.event === 'tool_result';
+    const t = evt.event === 'message' ? (0, argus_client_js_1.innerType)(evt) : evt.event;
+    return (t === 'tool_use' ||
+        t === 'tool_result' ||
+        t === 'tool_execution_start' ||
+        t === 'tool_execution_update' ||
+        t === 'tool_execution_end' ||
+        t === 'toolcall_start' ||
+        t === 'toolcall_delta' ||
+        t === 'toolcall_end');
 }
 function extractSummary(raw) {
     let obj = null;
@@ -30320,6 +30346,7 @@ const github = __importStar(__nccwpck_require__(3228));
 const template_js_1 = __nccwpck_require__(5237);
 const argus_client_js_1 = __nccwpck_require__(2367);
 const log_formatter_js_1 = __nccwpck_require__(698);
+const argus_client_js_2 = __nccwpck_require__(2367);
 const types_js_1 = __nccwpck_require__(8522);
 const comment_js_1 = __nccwpck_require__(2246);
 const step_summary_js_1 = __nccwpck_require__(7272);
@@ -30403,12 +30430,13 @@ async function run() {
                 streamUrl: runResp.stream_url,
                 onEvent: (evt) => {
                     const line = (0, log_formatter_js_1.formatEventLine)(evt);
+                    const t = evt.event === 'message' ? ((0, argus_client_js_2.innerType)(evt) ?? 'message') : evt.event;
                     if ((0, log_formatter_js_1.shouldGroup)(evt)) {
-                        core.startGroup(evt.event);
+                        core.startGroup(t);
                         core.info(line);
                         core.endGroup();
                     }
-                    else if (evt.event.includes('error')) {
+                    else if (t.includes('error')) {
                         core.notice(line);
                     }
                     else {
