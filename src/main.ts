@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { buildContext, resolvePromptBody, substitute } from './template.js';
 import { pollOutcome, startRun, streamEvents } from './argus-client.js';
-import { formatEventLine, shouldGroup } from './log-formatter.js';
+import { formatEventLine } from './log-formatter.js';
 import { innerType } from './argus-client.js';
 import { ArgusApiError, InsufficientCreditsError } from './types.js';
 import type { ArgusRunOutcomeResponse, ArgusWaitMode } from './types.js';
@@ -123,11 +123,7 @@ async function run(): Promise<void> {
         onEvent: (evt) => {
           const line = formatEventLine(evt);
           const t = evt.event === 'message' ? (innerType(evt) ?? 'message') : evt.event;
-          if (shouldGroup(evt)) {
-            core.startGroup(t);
-            core.info(line);
-            core.endGroup();
-          } else if (t.includes('error')) {
+          if (t.includes('error')) {
             core.notice(line);
           } else {
             core.info(line);

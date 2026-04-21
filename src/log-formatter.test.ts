@@ -1,58 +1,50 @@
 import { describe, it, expect } from 'vitest';
-import { formatEventLine, shouldGroup } from './log-formatter.js';
+import { formatEventLine } from './log-formatter.js';
 
 describe('formatEventLine', () => {
-  it('formats JSON data with known fields', () => {
+  it('extracts whitelisted structural fields', () => {
     const line = formatEventLine({
       event: 'step',
-      data: JSON.stringify({ message: 'Navigating to page', step: 3 }),
+      data: JSON.stringify({ step: 3, status: 'running' }),
     });
-    expect(line).toBe('[step] message=Navigating to page step=3');
+    expect(line).toBe('[step] step=3 status=running');
   });
 
-  it('formats plain text data', () => {
-    const line = formatEventLine({ event: 'status', data: 'running' });
-    expect(line).toBe('[status] running');
+  it('omits non-whitelisted fields (message, url) to avoid leaking content', () => {
+    const line = formatEventLine({
+      event: 'tool_use',
+      data: JSON.stringify({
+        tool: 'screenshot',
+        url: 'https://x.com/secret?token=abc',
+        message: 'Navigating to page',
+      }),
+    });
+    expect(line).toBe('[tool_use] tool=screenshot');
+    expect(line).not.toContain('message');
+    expect(line).not.toContain('url');
   });
 
-  it('truncates long plain text', () => {
+  it('emits only the tag when payload is plain text', () => {
+    expect(formatEventLine({ event: 'status', data: 'running' })).toBe('[status]');
+  });
+
+  it('emits only the tag for long plain text (no raw slice fallback)', () => {
     const long = 'x'.repeat(200);
-    const line = formatEventLine({ event: 'log', data: long });
-    expect(line).toContain('...');
-    expect(line.length).toBeLessThan(200);
+    expect(formatEventLine({ event: 'log', data: long })).toBe('[log]');
   });
 
   it('handles empty data', () => {
     expect(formatEventLine({ event: 'ping', data: '' })).toBe('[ping]');
   });
 
-  it('handles tool event JSON', () => {
+  it('emits only the tag when JSON has no whitelisted fields', () => {
     const line = formatEventLine({
-      event: 'tool_use',
-      data: JSON.stringify({ tool: 'screenshot', url: 'https://x.com' }),
+      event: 'custom',
+      data: JSON.stringify({ message: 'anything', payload: { secret: 'hunter2' } }),
     });
-    expect(line).toContain('tool=screenshot');
-    expect(line).toContain('url=https://x.com');
-  });
-});
-
-describe('shouldGroup', () => {
-  it('groups tool_use and tool_result', () => {
-    expect(shouldGroup({ event: 'tool_use', data: '' })).toBe(true);
-    expect(shouldGroup({ event: 'tool_result', data: '' })).toBe(true);
+    expect(line).toBe('[custom]');
   });
 
-  it('groups tool_execution_* packed in message frames', () => {
-    expect(shouldGroup({ event: 'message', data: '{"type":"tool_execution_start"}' })).toBe(true);
-    expect(shouldGroup({ event: 'message', data: '{"type":"toolcall_end"}' })).toBe(true);
-  });
-
-  it('does not group step events', () => {
-    expect(shouldGroup({ event: 'step', data: '' })).toBe(false);
-  });
-});
-
-describe('formatEventLine (inner-type unwrap)', () => {
   it('uses inner data.type as tag when outer event is "message"', () => {
     const line = formatEventLine({
       event: 'message',
